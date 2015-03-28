@@ -2,11 +2,23 @@
 """
 
 import pkg_resources
+import sys
 
 import logging
 
 
 LOG = logging.getLogger(__name__)
+
+
+class PluginException(Exception):
+    def __init__(self, original_exception):
+        super(Exception)
+        self._original_exception = original_exception
+        ex_type, ex, self._traceback = sys.exc_info() 
+
+    @property
+    def traceback(self):
+        return self._traceback
 
 
 class Extension(object):
@@ -167,7 +179,7 @@ class ExtensionManager(object):
                 raise
             except Exception as err:
                 if self._on_load_failure_callback is not None:
-                    self._on_load_failure_callback(self, ep, err)
+                    self._on_load_failure_callback(self, ep, PluginException(err))
                 else:
                     LOG.error('Could not load %r: %s', ep.name, err)
                     LOG.exception(err)
